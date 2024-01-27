@@ -27,7 +27,7 @@ citation:
   container-title: "Technical Report"
   publisher: "Inyo County Water Department"
   issued: "2024-01-26"
-  url: https://zach-nelson.github.io/MonitoringWellsDB/
+  url: https://zach-nelson.github.io/ovgw/
 google-scholar: true
 categories: [R, hydrology, monitoring wells, LADWP data, OVGA, time series]
 ---
@@ -36,9 +36,8 @@ categories: [R, hydrology, monitoring wells, LADWP data, OVGA, time series]
 
 Depth to water measurements from LADWP monitoring wells are provided to ICWD after the end of each water year. Data is exported from WISKI (water information system by [Kisters](https://www.kisters.net/wiski/)) in ZRXP format, an ASCII data exchange file format with a repeating header-data structure. These .DAT text files can be opened in a text editor or excel for processing, but here they are programmatically parsed, processed, [appended to the active internal database](#mastersave) and [formatted and exported for the annual OVGA data management system updates](#ovgasave).
 
-Summary information about the processing, number of records dropped etc, and indicator well hydrographs for visual QA/QC are provided. The most recent OVGA depth to water import template instructions are included as an appendix. Before running the same code for the next year, update `year` in the file names for 1) [the water year on the input files and master database](#updatewy), 2) [output file name for the master database](#masterdb) and the 3) [ovga update file](#ovgaupdate). The index.qmd of this repository contains the full code to process the data and produce this document.
+Summary information about the processing, number of records dropped etc, and indicator well hydrographs for visual QA/QC are provided. The most recent OVGA depth to water import template instructions are included as an appendix. Before running the same code for the next year, update `year` in the file names for 1) [the water year on the input files and master database](#updatewy), 2) [output file name for the master database](#masterdb) and the 3) [ovga update file](#ovgaupdate). The [index.qmd](https://github.com/zach-nelson/ovgw/blob/main/index.qmd) of this repository contains the full code to process the data and produce this document.
 
-Complete as of 1-25-24
 
 ```{r packages-setup, warning = FALSE,message = FALSE,include=FALSE}
 #| code-fold: true
@@ -308,7 +307,7 @@ testwell.up <- try %>% select(-date, -datetime) %>% rename(date = date.y.m.d) %>
 ```{r appendupdates, echo = TRUE}
 #| code-fold: true
 #| code-summary: "append updates to master database"
-#| 
+
 ## Append updates to master
 testwells.combined <- bind_rows(hist, testwell.up) 
 
@@ -322,10 +321,13 @@ testwells.combined <- bind_rows(hist, testwell.up)
 -   `r testwells.combined %>% nrow()` rows in the active database
 -   `r testwells.combined %>% distinct(staid) %>% nrow()` staids in the active database
 
-
 # DB update {#mastersave}
 
 ## export db file {#masterdb}
+
+-   [Completed 1-24-24 annual update](https://github.com/zach-nelson/ovgw/blob/main/output/testwellwy2023.csv)
+
+-   [Completed 1-24-24 full database](https://github.com/zach-nelson/ovgw/blob/main/output/Monitoring_Wells_Master_2023.csv)
 
 ```{r dbupdatesavecsv, eval = FALSE, echo=TRUE}
 #| code-fold: true
@@ -337,7 +339,7 @@ testwell.up %>% write_csv(here('output','testwellwy2023.csv'))
 # whole dataset
 testwells.combined %>% write_csv(here('output','Monitoring_Wells_Master_2023.csv'))
 
-# Completed 1-24-24
+# 
 ```
 
 ::: column-page
@@ -347,8 +349,8 @@ datatable(testwell.up,
 ```
 :::
 
-
 # OVGA formatting
+
 ```{r rp_mostrecent, echo = TRUE}
 #| code-fold: true
 #| code-summary: "find latest RP elevation updates"
@@ -393,22 +395,6 @@ datatable(dtwrp.rpelev,
 
 ```
 
-
-
-```{r ecdf_plot, eval=FALSE}
-dtwrp.rpelev %>% group_by(staid)%>% summarise(annfreq=n()) %>% ggplot(aes(x = annfreq))+
-  stat_ecdf()+
-# +
-  # geom_histogram()+
-  ylim(.0,1)+
-  xlim(0,100)+
-geom_vline(xintercept=12, color="blue")+
-geom_hline(yintercept=.96,color='red')
-
-# -   96% of staids have one read per month.
-```
-
-
 ```{r avgdailydtw, echo = TRUE}
 #| code-fold: true
 #| code-summary: "avg daily dtw - aggregating"
@@ -427,7 +413,7 @@ dtwrpavg.rpelevBeta <- dtwrp.rpelev %>% group_by(staid, date, rp_elev) %>% summa
 datatable(dtwrpavg.rpelev,
   caption = 'daily averaging reduces data')
 
-# 123311 to 19865 an order of mag reduction. date aggregation?
+
 ```
 
 ```{r esvtr, echo = TRUE}
@@ -564,7 +550,9 @@ upload <- rpselect2 %>%
 # upload %>% group_by(WellName) %>% summarise(records = n()) %>% nrow()
 ```
 
-Completed 1-24-24
+[Completed 1-24-24](https://github.com/zach-nelson/ovgw/blob/main/output/ovga_uploads_mw_with_rpe_102022_092023_zn.csv)
+
+[csv](https://raw.githubusercontent.com/zach-nelson/ovgw/main/output/ovga_uploads_mw_with_rpe_102022_092023_zn.csv)
 
 
 -   `r rpselect %>% nrow()` well-days in update with rp elevations
@@ -578,7 +566,6 @@ Completed 1-24-24
 -   `r upload %>% nrow()` well-days in the ovga upload
 
 -   `r upload %>% group_by(WellName) %>% summarise(records = n()) %>% nrow()` staids in the ovga upload
-
 
 ## export ovga import file {#ovgaupdate}
 
@@ -620,7 +607,7 @@ datatable(upload,
 
 # QA/QC Hydrographs {#qaqc}
 
-Examined 1-24-24 - two wells missing from this year. do a year over year comparison of staids.
+start of the water year is demarcated for 2022 and 2023
 
 ## Laws
 
@@ -920,8 +907,6 @@ datatable(na.rp.elev,
 ```
 :::
 
-
-
 ```{r ecdf_plot, eval=FALSE}
 dtwrp.rpelev %>% group_by(staid)%>% summarise(annfreq=n()) %>% ggplot(aes(x = annfreq))+
   stat_ecdf()+
@@ -934,8 +919,6 @@ geom_hline(yintercept=.96,color='red')
 
 # -   96% of staids have one read per month.
 ```
-
-
 
 # Appendix: GLA Data Depth to Water Import Procedures
 
