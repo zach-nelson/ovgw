@@ -24,7 +24,7 @@ draft: false
 image: "lw-i85-fac-1.png"
 citation:
   type: report
-  container-title: "Technical Report"
+  container-title: "Data Report"
   publisher: "Inyo County Water Department"
   issued: "2024-01-26"
   url: https://zach-nelson.github.io/ovgw/
@@ -383,13 +383,10 @@ rpelev_4 <- rpelev_3 %>%
 
 m1 <- testwells.combined %>% filter(date > "2022-09-30") %>% select(staid,date,dtw.rp)
 
-# head(m1)
-# 96,916 rows staid,date,dtw.rp
-
 # join the rp elevations to the annual updates
 # join latest rp elevation measurements provided by LA
 dtwrp.rpelev <- m1 %>% left_join(rpelev_4, by = 'staid')
-
+#123,311 1-24-24
 datatable(dtwrp.rpelev,
   caption = 'most recent water year with rp elevation joined.')
 
@@ -401,15 +398,11 @@ datatable(dtwrp.rpelev,
 
 # daily average dtw
 dtwrpavg.rpelev <- dtwrp.rpelev %>% group_by(staid, date, rp_elev) %>% summarise(dtw.rp =  round(mean(dtw.rp),2))
+#19,865 1-24-24
+# dtwrpavg.rpelevBeta <- dtwrp.rpelev %>% group_by(staid, date, rp_elev) %>% summarise(dtw.rp =  round(mean(dtw.rp),2),
+#           dailyCount = n()
+#           ) %>% arrange(desc(dailyCount))
 
-dtwrpavg.rpelevBeta <- dtwrp.rpelev %>% group_by(staid, date, rp_elev) %>% summarise(dtw.rp =  round(mean(dtw.rp),2),
-          dailyCount = n()
-          ) %>% arrange(desc(dailyCount))
-
-# dtwrpavg.rpelevBeta %>% select(staid, date, dtw.rp, dailyCount) %>% filter(dailyCount >25) %>% datatable()
-
-# dtwrpavg.rpelevBeta %>% datatable()
-#19865
 datatable(dtwrpavg.rpelev,
   caption = 'daily averaging reduces data')
 
@@ -431,9 +424,9 @@ record.number <- dtwrp.rpelev %>%
   summarise(count.with.rpe = n()) %>% 
   mutate(MMethod = case_when(count.with.rpe >= 48 ~ "TR",
                             count.with.rpe < 48~ "ES"))
+# if there are four reads per day, once per month, approximates to 48. quick and dirty separation. a list of pressure transducer staids would be better if it could be maintained.
 
-
-# head(record.number %>% arrange(-count.with.rpe))
+head(record.number %>% arrange(-count.with.rpe))
 
 ```
 
